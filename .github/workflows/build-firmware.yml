@@ -1,0 +1,56 @@
+name: Build ZOROZ XiaoZhi ESP32-S3 3.5in BIN
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: espressif/idf:v6.0.2
+
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v4
+
+      - name: Clone XiaoZhi v2.4.2
+        shell: bash
+        run: |
+          git clone --depth 1 --branch v2.4.2 https://github.com/78/xiaozhi-esp32.git xiaozhi-esp32
+
+      - name: Apply Engr Zoroz custom board
+        shell: bash
+        run: |
+          python custom/install_patch.py xiaozhi-esp32
+          echo "==== custom config.h ===="
+          cat xiaozhi-esp32/main/boards/engrzoroz-s3cam-ili9486/config.h
+          echo "==== custom config.json ===="
+          cat xiaozhi-esp32/main/boards/engrzoroz-s3cam-ili9486/config.json
+
+      - name: Build merged firmware
+        shell: bash
+        run: |
+          source "$IDF_PATH/export.sh"
+          cd xiaozhi-esp32
+          idf.py --version
+          python scripts/build.py engrzoroz-s3cam-ili9486 \
+            --name engrzoroz-s3cam-ili9486 \
+            --language en-US \
+            --wake-word disabled
+          test -f build/merged-binary.bin
+          cp build/merged-binary.bin build/EngrZoroz_XiaoZhi_ESP32S3_35inch_ILI9486.bin
+          ls -lh build/merged-binary.bin build/EngrZoroz_XiaoZhi_ESP32S3_35inch_ILI9486.bin
+
+      - name: Upload ready-to-flash BIN
+        uses: actions/upload-artifact@v4
+        with:
+          name: EngrZoroz-XiaoZhi-ESP32S3-35inch-BIN
+          path: |
+            xiaozhi-esp32/build/EngrZoroz_XiaoZhi_ESP32S3_35inch_ILI9486.bin
+            xiaozhi-esp32/build/merged-binary.bin
+          if-no-files-found: error
+          retention-days: 30

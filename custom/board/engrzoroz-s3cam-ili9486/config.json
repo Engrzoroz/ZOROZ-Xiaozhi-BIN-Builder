@@ -1,0 +1,15 @@
+{
+  "type": "engrzoroz-s3cam-ili9486",
+  "target": "esp32s3",
+  "builds": [
+    {
+      "name": "engrzoroz-s3cam-ili9486",
+      "sdkconfig_append": [],
+      "build_options": {
+        "display_style": "wechat",
+        "camera_hmirror": false,
+        "camera_vflip": false
+      }
+    }
+  ]
+}
